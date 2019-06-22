@@ -15,6 +15,7 @@ TODO
 
 ## Steps
 - Set LED Nums in arduino and controller
+- Set serial port name
 - Build and happy hacking!
 
 ## MIT License
