@@ -1,6 +1,6 @@
 #include <FastLED.h>
 
-#define NUM_LEDS 30
+#define NUM_LEDS 60
 #define LED_PIN 2
 
 byte buf[4] = {0, 0, 0, 0};
