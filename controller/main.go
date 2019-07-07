@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	leftLEDCount   = 5
-	topLEDCount    = 10
-	rightLEDCount  = 5
-	bottomLEDCount = 10
+	leftLEDCount   = 10
+	topLEDCount    = 20
+	rightLEDCount  = 10
+	bottomLEDCount = 20
 	maxLED         = leftLEDCount + topLEDCount + rightLEDCount + bottomLEDCount
 )
 
 func main() {
 	options := serial.OpenOptions{
-		PortName:        "/dev/cu.usbserial-141210",
+		PortName:        "/dev/cu.usbserial-14120",
 		BaudRate:        250000,
 		DataBits:        8,
 		StopBits:        1,
@@ -42,37 +42,45 @@ func main() {
 	c := capture{bounds.Dx(), bounds.Dy()}
 
 	for {
-		imgL := c.Left(80, 80)
-		processVertical(&led, imgL, leftLEDCount)
-		imgT := c.Top(80, 80)
-		processHorizontal(&led, imgT, topLEDCount)
-		imgR := c.Right(80, 80)
-		processVertical(&led, imgR, rightLEDCount)
-		imgB := c.Bottom(80, 80)
-		processHorizontal(&led, imgB, bottomLEDCount)
+		imgL := c.Left(100, 80)
+		processVertical(&led, imgL, leftLEDCount, true)
+		imgT := c.Top(100, 80)
+		processHorizontal(&led, imgT, topLEDCount, false)
+		imgR := c.Right(100, 80)
+		processVertical(&led, imgR, rightLEDCount, false)
+		imgB := c.Bottom(100, 80)
+		processHorizontal(&led, imgB, bottomLEDCount, true)
 		time.Sleep(time.Second)
 	}
 }
 
-func processVertical(c *ledController, img *image.RGBA, count int) {
+func processVertical(lc *ledController, img *image.RGBA, count int, swap bool) {
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
 	div := height / count
 
 	for i := 0; i < count; i++ {
-		img := img.SubImage(image.Rect(0, div*i, width, div*(i+1)))
-		c.SetColor(getProminentColor(img))
+		n := i
+		if swap {
+			n = count - i - 1
+		}
+		img := img.SubImage(image.Rect(0, div*n, width, div*(n+1)))
+		lc.WriteColor(getProminentColor(img))
 	}
 }
 
-func processHorizontal(c *ledController, img *image.RGBA, count int) {
+func processHorizontal(lc *ledController, img *image.RGBA, count int, swap bool) {
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
 	div := width / count
 
 	for i := 0; i < count; i++ {
-		img := img.SubImage(image.Rect(div*i, 0, div*(i+1), height))
-		c.SetColor(getProminentColor(img))
+		n := i
+		if swap {
+			n = count - i - 1
+		}
+		img := img.SubImage(image.Rect(div*n, 0, div*(n+1), height))
+		lc.WriteColor(getProminentColor(img))
 	}
 }
 

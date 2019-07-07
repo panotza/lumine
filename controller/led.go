@@ -11,7 +11,7 @@ type ledController struct {
 	buf    []byte
 }
 
-func (c *ledController) SetColor(r, g, b uint8) {
+func (c *ledController) WriteColor(r, g, b uint8) {
 	c.buf[c.n] = r
 	c.buf[c.n+1] = g
 	c.buf[c.n+2] = b
