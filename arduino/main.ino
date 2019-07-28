@@ -3,8 +3,8 @@
 #define NUM_LEDS 60
 #define LED_PIN 2
 
-byte buf[4] = {0, 0, 0, 0};
 CRGB leds[NUM_LEDS];
+size_t buf_length = NUM_LEDS * 3;
 
 void setup()
 {
@@ -15,6 +15,6 @@ void setup()
 
 void loop()
 {
-	Serial.readBytes((char *)leds, NUM_LEDS * 3);
+	Serial.readBytes((char *)leds, buf_length);
 	FastLED.show();
 }

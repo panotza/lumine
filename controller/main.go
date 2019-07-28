@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/kbinani/screenshot"
@@ -21,43 +20,36 @@ const (
 )
 
 func main() {
-	led, err := newController("/dev/cu.usbserial-14210", totalLED)
+	ctrl, err := newController("/dev/cu.usbserial-14210", totalLED)
 	if err != nil {
 		log.Fatalf("serial.Open: %v", err)
 	}
-	defer led.Close()
+	defer ctrl.Close()
 
 	bounds := screenshot.GetDisplayBounds(0)
 	c := capture{bounds.Dx(), bounds.Dy()}
 
-	sigterm := make(chan os.Signal)
-	done := make(chan struct{})
+	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigterm
-		done <- struct{}{}
-	}()
 
 	for {
 		select {
-		case <-done:
+		case <-sigterm:
 			return
 		default:
 			imgL := c.Left(90, 50)
-			processVertical(led, imgL, leftLEDCount, true)
+			processVertical(ctrl, imgL, leftLEDCount, true)
 			imgT := c.Top(100, 50)
-			processHorizontal(led, imgT, topLEDCount, false)
+			processHorizontal(ctrl, imgT, topLEDCount, false)
 			imgR := c.Right(90, 50)
-			processVertical(led, imgR, rightLEDCount, false)
+			processVertical(ctrl, imgR, rightLEDCount, false)
 			imgB := c.Bottom(100, 50)
-			processHorizontal(led, imgB, bottomLEDCount, true)
-			time.Sleep(500 * time.Millisecond)
+			processHorizontal(ctrl, imgB, bottomLEDCount, true)
 		}
 	}
 }
 
-func processVertical(lc *ledController, img *image.RGBA, count int, swap bool) {
+func processVertical(lc *controller, img *image.RGBA, count int, swap bool) {
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
 	div := height / count
@@ -72,7 +64,7 @@ func processVertical(lc *ledController, img *image.RGBA, count int, swap bool) {
 	}
 }
 
-func processHorizontal(lc *ledController, img *image.RGBA, count int, swap bool) {
+func processHorizontal(lc *controller, img *image.RGBA, count int, swap bool) {
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
 	div := width / count
