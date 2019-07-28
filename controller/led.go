@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"time"
 
 	"github.com/jacobsa/go-serial/serial"
 )
@@ -50,5 +51,6 @@ func (c *controller) Close() {
 
 	for i := 0; i < totalLED; i++ {
 		c.WriteColor(0, 0, 0)
+		time.Sleep(time.Millisecond)
 	}
 }
