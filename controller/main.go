@@ -20,7 +20,7 @@ const (
 
 func main() {
 	options := serial.OpenOptions{
-		PortName:        "/dev/cu.usbserial-14120",
+		PortName:        "/dev/cu.usbserial-14210",
 		BaudRate:        250000,
 		DataBits:        8,
 		StopBits:        1,
@@ -42,15 +42,15 @@ func main() {
 	c := capture{bounds.Dx(), bounds.Dy()}
 
 	for {
-		imgL := c.Left(100, 80)
+		imgL := c.Left(90, 50)
 		processVertical(&led, imgL, leftLEDCount, true)
-		imgT := c.Top(100, 80)
+		imgT := c.Top(100, 50)
 		processHorizontal(&led, imgT, topLEDCount, false)
-		imgR := c.Right(100, 80)
+		imgR := c.Right(90, 50)
 		processVertical(&led, imgR, rightLEDCount, false)
-		imgB := c.Bottom(100, 80)
+		imgB := c.Bottom(100, 50)
 		processHorizontal(&led, imgB, bottomLEDCount, true)
-		time.Sleep(time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
