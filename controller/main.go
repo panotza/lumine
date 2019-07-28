@@ -3,10 +3,12 @@ package main
 import (
 	"image"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/EdlinOrg/prominentcolor"
-	"github.com/jacobsa/go-serial/serial"
 	"github.com/kbinani/screenshot"
 )
 
@@ -15,42 +17,43 @@ const (
 	topLEDCount    = 20
 	rightLEDCount  = 10
 	bottomLEDCount = 20
-	maxLED         = leftLEDCount + topLEDCount + rightLEDCount + bottomLEDCount
+	totalLED       = leftLEDCount + topLEDCount + rightLEDCount + bottomLEDCount
 )
 
 func main() {
-	options := serial.OpenOptions{
-		PortName:        "/dev/cu.usbserial-14210",
-		BaudRate:        250000,
-		DataBits:        8,
-		StopBits:        1,
-		MinimumReadSize: 4,
-	}
-
-	port, err := serial.Open(options)
+	led, err := newController("/dev/cu.usbserial-14210", totalLED)
 	if err != nil {
 		log.Fatalf("serial.Open: %v", err)
 	}
-	defer port.Close()
+	defer led.Close()
 
-	led := ledController{
-		maxLED: maxLED,
-		w:      port,
-		buf:    make([]byte, maxLED*3),
-	}
 	bounds := screenshot.GetDisplayBounds(0)
 	c := capture{bounds.Dx(), bounds.Dy()}
 
+	sigterm := make(chan os.Signal)
+	done := make(chan struct{})
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigterm
+		done <- struct{}{}
+	}()
+
 	for {
-		imgL := c.Left(90, 50)
-		processVertical(&led, imgL, leftLEDCount, true)
-		imgT := c.Top(100, 50)
-		processHorizontal(&led, imgT, topLEDCount, false)
-		imgR := c.Right(90, 50)
-		processVertical(&led, imgR, rightLEDCount, false)
-		imgB := c.Bottom(100, 50)
-		processHorizontal(&led, imgB, bottomLEDCount, true)
-		time.Sleep(500 * time.Millisecond)
+		select {
+		case <-done:
+			return
+		default:
+			imgL := c.Left(90, 50)
+			processVertical(led, imgL, leftLEDCount, true)
+			imgT := c.Top(100, 50)
+			processHorizontal(led, imgT, topLEDCount, false)
+			imgR := c.Right(90, 50)
+			processVertical(led, imgR, rightLEDCount, false)
+			imgB := c.Bottom(100, 50)
+			processHorizontal(led, imgB, bottomLEDCount, true)
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
 }
 
